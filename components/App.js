@@ -1,7 +1,7 @@
 var GIPHY_API_URL = 'https://api.giphy.com',
 GIPHY_PUB_KEY = '9af6d92a7b0d48a4812c800105edda24';
 
-const url = GIPHY_API_URL + '/v1/gifs/random?api_key=' + GIPHY_PUB_KEY + '&tag=' + searchingText; 
+const url = GIPHY_API_URL + '/v1/gifs/random?api_key=' + GIPHY_PUB_KEY + '&tag='; 
 
 App = React.createClass({
 
@@ -13,44 +13,38 @@ App = React.createClass({
     };
 },
 
+getGifPromise: function(searchingText) {
+    return new Promise(function(resolve, reject) {
+        const xhr = new XMLHttpRequest(); 
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText).data; 
 
-getGif: function(searchingText, callback) {
-    return new Promise(
-        function(resolve, reject) {
-            const xhr = new XMLHttpRequest(); 
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    resolve(this.resolve);
-                    var data = JSON.parse(xhr.responseText).data; 
-                    var gif = { 
-                        url: data.fixed_width_downsampled_url,
-                        sourceUrl: data.url
-                    };
-                    callback(gif); 
-                } else {reject(new Error(this.statusText));}
-            };
-            xhr.open('GET', url);
-            xhr.send();
-        });
-    );
-    getGif(url)
-    .then(response => console.log('Contents: ' + response))
-    .catch(error => console.error('Something went wrong', error));
+                var gif = { 
+                    url: data.fixed_width_downsampled_url,
+                    sourceUrl: data.url
+                };
+                resolve(gif)
+            } else {reject(new Error(this.statusText));}
+        };
+        xhr.open('GET', url + searchingText);
+        xhr.send();
+    });
 },
 
 handleSearch: function(searchingText) { 
     this.setState({
       loading: true 
     });
-    this.getGif(searchingText, function(gif) { 
-      this.setState({ 
-        loading: false,  
-        gif: gif,  
-        searchingText: searchingText 
-      });
-    }.bind(this));
-  },
 
+    this.getGifPromise(searchingText).then(function(gif) {
+        this.setState({ 
+            loading: false,  
+            gif: gif,  
+            searchingText: searchingText 
+          });
+    }.bind(this))
+  },
 
 
     render: function() {
